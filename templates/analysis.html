@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>DEG Viewer</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -80,7 +80,7 @@
     {% endif %}
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="../js/home.js"></script>
+<script src="{{ url_for('static', filename='home.js') }}"></script>
 
     <footer class="site-footer">
         <span class="footer-title">© 2026 RNAseq Analysis Platform</span>
