@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>DEG Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* hero-layer uses pointer-events:none, so explicitly re-enable for interactive controls */
+        .hero-card button,
+        .hero-card input,
+        .hero-card select,
+        .hero-card form {
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-container">
+    <h2 class="project-title">Project: {{ project }}</h2>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <button type="button" onclick="window.location.href='/'">Home</button>
+
+        <form action="/upload" method="post" enctype="multipart/form-data"
+            style="display: flex; align-items: center; gap: 6px; margin: 0;">
+            <input type="hidden" name="project" value="{{ project }}">
+            <input type="hidden" name="mode" value="scrna">
+            <input type="file" name="file" accept=".csv,.tsv">
+            <button type="submit">Upload DEG</button>
+        </form>
+
+{% if files|length > 0 %}
+<select id="csv-select"
+        onchange="if(this.value) loadFile(this.value);"
+        style="margin-left: 10px;">
+    <option value="">Select CSV</option>
+    {% for f in files %}
+    <option value="/projects/{{ mode }}/{{ project }}/files/{{ f }}">{{ f }}</option>
+    {% endfor %}
+</select>
+<span id="loading-indicator" style="display:none; margin-left:8px; font-weight:600;">
+    Loading…
+</span>
+{% endif %}
+        <button type="button" id="btn-delete-csv" style="color: red;">
+            Delete CSV
+        </button>
+        <button type="button" onclick="openVolcano()">Volcano</button>
+        <button type="button" onclick="openHeatmap()">Heatmap</button>
+        <button type="button" onclick="openBoxPlot()">BoxPlot</button>
+        <form action="/project/{{ project }}/delete" method="post"
+                onsubmit="return confirm('Delete project {{ project }} ? This cannot be undone.');"
+                style="margin-left: 10px;">
+            <input type="hidden" name="mode" value="scrna">
+            <button type="submit" style="color: red;">
+                Delete Project
+            </button>
+        </form>
+
+
+    </div>
+    <div class="action-row">
+        <button type="button" id="btn-show-selected" onclick="applySelectionFilter()">Show selected</button>
+        <button type="button" id="btn-show-all" onclick="clearSelectionFilter()">Show all</button>
+        <button type="button" id="btn-deg-filter" onclick="applyPadjFilter()">padj &lt; 0.05</button>
+        <button type="button" id="btn-pseudo-filter" onclick="applyPseudoFilter()">-Pseudo</button>
+        <button type="button" id="btn-tf-intersect" onclick="applyGeneSetFilter('TF')">TF ∩</button>
+
+        <button type="button" id="btn-hedgehog" onclick="applyGeneSetFilter('Hedgehog')">Hedgehog</button>
+    </div>
+    <table id="table" class="display" style="width:100%"></table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="{{ url_for('static', filename='scrna.js') }}"></script>
+
+    <footer class="site-footer">
+        <span class="footer-title">© 2026 RNAseq Analysis Platform</span>
+        <span class="footer-sep">·</span>
+        <span>Author: Eden Zhang</span>
+    </footer>
+</body>
+
+</html>

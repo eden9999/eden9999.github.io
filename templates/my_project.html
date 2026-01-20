@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ project }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+
+  <body>
+    <div class="page-container">
+      <div class="project-header" style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+        <h2 class="project-title" style="margin:0; display:flex; align-items:center; gap:8px;">
+          <span id="project-title-text">{{ project }}</span>
+          <input id="project-title-input" type="text" value="" style="display:none; min-width: 260px;" />
+          <button type="button" id="project-title-edit" class="edit-icon">✎</button>
+          <button type="button" id="project-title-ok" style="display:none;">OK</button>
+          <button type="button" id="project-title-cancel" style="display:none;">Cancel</button>
+        </h2>
+
+        <div class="project-owner-inline" style="display:flex; align-items:center; gap:8px;">
+          <strong>Owner:</strong>
+          <span id="project-owner-text">please add owner</span>
+          <input id="project-owner-input" type="text" style="display:none; min-width: 180px;" />
+          <button type="button" id="project-owner-edit" class="edit-icon">✎</button>
+          <button type="button" id="project-owner-ok" style="display:none;">OK</button>
+          <button type="button" id="project-owner-cancel" style="display:none;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Summary row -->
+      <div class="project-summary" style="margin-top:18px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <strong>Summary:</strong>
+          <button type="button" id="project-summary-edit" class="edit-icon">✎</button>
+          <button type="button" id="project-summary-ok" style="display:none;">OK</button>
+          <button type="button" id="project-summary-cancel" style="display:none;">Cancel</button>
+        </div>
+
+        <div>
+          <div id="project-summary-text" style="white-space:pre-wrap;">
+            please add summary
+          </div>
+          <textarea
+            id="project-summary-input"
+            rows="3"
+            style="display:none; width:100%; max-width:600px;"
+          ></textarea>
+        </div>
+      </div>
+      <div id="experiments-list"></div>
+    </div>
+
+    <div id="projects-container">
+
+      <div class="experiment-controls" style="margin-top:-30px; display:flex; flex-direction:column; align-items:center;">
+        <button type="button" id="add-experiment-btn">Add New Experiment</button>
+
+        <div id="experiment-form" class="experiment-form-card" style="display:none; margin:24px auto 0 auto;">
+          <input id="exp-technique" type="text" placeholder="Technique" style="display:block; width:100%; max-width:600px; margin-bottom:8px;">
+          <div style="font-weight:600; margin-bottom:10px;">Detail of Samples</div>
+          <input id="exp-strain" type="text" placeholder="Strain"
+                 style="display:block; width:100%; max-width:600px; margin-bottom:8px;">
+
+          <div class="exp-row-3" style="margin-bottom:8px;">
+            <input id="exp-sex" type="text" placeholder="Sex">
+            <input id="exp-age" type="text" placeholder="Age">
+            <input id="exp-quantity" type="text" placeholder="Quantity">
+          </div>
+          <textarea id="exp-comments" rows="2" placeholder="Comments" style="display:block; width:100%; max-width:600px; margin-bottom:8px;"></textarea>
+          <button type="button" id="exp-ok">OK</button>
+          <button type="button" id="exp-cancel">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='project.js') }}"></script>
+  </body>
+</html> 

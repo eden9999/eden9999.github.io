@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Projects</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="page-container">
+        <h2 class="project-title">Projects</h2>
+
+        <div class="project-grid" id="projectsContainer">
+            <!-- Create card (always last via JS) -->
+            <div class="project-card" id="createCard">
+                <!-- Use a div as the clickable "button" so we can place real buttons inside -->
+                <div id="create-project-btn"
+                     class="create-project-btn"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Create New Project"
+                     style="position:relative; width:100%; min-height:92px; display:flex; align-items:center; justify-content:center; border-radius:10px;">
+                    <span id="createLabel" class="create-label" style="pointer-events:none;">➕ Create New Project</span>
+
+                    <!-- Popup lives INSIDE the same rectangle -->
+                    <div id="popup" class="create-popup" style="display:none; position:absolute; inset:0; padding:14px 16px; box-sizing:border-box; align-items:center; gap:6px;">
+                        <input
+                            type="text"
+                            id="projectNameInput"
+                            class="create-input"
+                            placeholder="Enter project name"
+                            maxlength="50"
+                            style="flex:1 1 auto; min-width:240px; height:32px;"
+                        />
+                        <button id="addProjectBtn" type="button" class="create-mini-btn" style="height:28px; padding:2px 8px; font-size:12px; width:auto; flex:0 0 auto;">OK</button>
+                        <button id="cancelBtn" type="button" class="create-mini-btn" style="height:28px; padding:2px 8px; font-size:12px; width:auto; flex:0 0 auto;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const createProjectBtn = document.getElementById('create-project-btn');
+        const createLabel = document.getElementById('createLabel');
+        const popup = document.getElementById('popup');
+        const projectNameInput = document.getElementById('projectNameInput');
+        const addProjectBtn = document.getElementById('addProjectBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const projectsContainer = document.getElementById('projectsContainer');
+        const createCard = document.getElementById('createCard');
+
+        // Persist project buttons in browser storage (same idea as the analysis page)
+        const STORAGE_KEY = 'deg_project_buttons_v1';
+
+        function loadProjects() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const arr = raw ? JSON.parse(raw) : [];
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveProjects(list) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        }
+
+        function openCreate() {
+            popup.style.display = 'flex';
+            createLabel.style.opacity = '0';
+            projectNameInput.value = '';
+            projectNameInput.focus();
+        }
+
+        function closeCreate() {
+            popup.style.display = 'none';
+            createLabel.style.opacity = '1';
+        }
+
+        function renderProjectCard(name) {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            // keep class name consistent with existing CSS conventions
+            btn.className = 'projectBtn';
+            btn.textContent = name;
+            btn.title = name;
+            btn.addEventListener('click', () => {
+                // placeholder: wire to real project navigation later
+                window.location.href = "/projects/" + encodeURIComponent(name);
+            });
+
+            card.appendChild(btn);
+
+            // Insert BEFORE the create card so create stays last
+            projectsContainer.insertBefore(card, createCard);
+            projectsContainer.appendChild(createCard);
+        }
+
+        function addProject(name) {
+            // de-dup
+            const existing = loadProjects();
+            if (!existing.includes(name)) {
+                existing.push(name);
+                saveProjects(existing);
+                renderProjectCard(name);
+            }
+        }
+
+        // Initial render from storage
+        (function initFromStorage() {
+            const names = loadProjects();
+            for (const n of names) {
+                renderProjectCard(n);
+            }
+        })();
+
+        createProjectBtn.addEventListener('click', (e) => {
+            // Clicking inside popup should not re-trigger open
+            if (popup.contains(e.target)) return;
+            openCreate();
+        });
+
+        createProjectBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                openCreate();
+            } else if (e.key === 'Escape') {
+                closeCreate();
+            }
+        });
+
+        // Prevent clicks inside the popup from bubbling to the container
+        popup.addEventListener('click', (e) => e.stopPropagation());
+
+        cancelBtn.addEventListener('click', () => {
+            closeCreate();
+        });
+
+        addProjectBtn.addEventListener('click', () => {
+            const name = projectNameInput.value.trim();
+            if (name === '') {
+                alert('Project name cannot be empty.');
+                projectNameInput.focus();
+                return;
+            }
+            addProject(name);
+            closeCreate();
+        });
+
+        projectNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                addProjectBtn.click();
+            } else if (e.key === 'Escape') {
+                cancelBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
