@@ -1,1 +1,92 @@
+<!doctype html>
+<html>
 
+<head>
+    <meta charset="utf-8">
+    <title>DEG Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* hero-layer uses pointer-events:none, so explicitly re-enable for interactive controls */
+        .hero-card button,
+        .hero-card input,
+        .hero-card select,
+        .hero-card form {
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    {% if view != "projects" %}
+    <div class="page-container">
+    {% endif %}
+    {% if view == "projects" %}
+<div class="hero-layer">
+    <!-- Bulk container -->
+    <div class="hero-card">
+        <h2>Bulk RNAseq Projects</h2>
+        <img src="{{ url_for('static', filename='bg/bulk.png') }}"
+             alt="Bulk RNAseq illustration"
+             class="hero-illustration">
+
+        <button type="button" class="create-trigger1"
+                onclick="this.style.display='none'; this.nextElementSibling.style.display='block'; this.nextElementSibling.querySelector('input[name=name]').focus();">
+            ➕ Create Bulk Project
+        </button>
+
+        <form class="create-form" action="/project/new_bulk" method="post" style="display:none;">
+            <input type="text" name="name" placeholder="Project name">
+            <button type="submit">OK</button>
+        </form>
+
+        <select onchange="if(this.value) window.location.href=this.value;" style="margin-top:18px;">
+            <option value="">Select Bulk Project</option>
+            {% for p in bulk_projects.keys() %}
+            <option value="/Aproject/{{ p }}?mode=bulk">{{ p }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- scRNA container -->
+    <div class="hero-card">
+        <h2>scRNAseq Projects</h2>
+        <img src="{{ url_for('static', filename='bg/scrna.png') }}"
+             alt="scRNAseq illustration"
+             class="hero-illustration">
+
+        <button type="button" class="create-trigger2"
+                onclick="this.style.display='none'; this.nextElementSibling.style.display='block'; this.nextElementSibling.querySelector('input[name=name]').focus();">
+            ➕ Create scRNA Project
+        </button>
+
+        <form class="create-form" action="/project/new_scrna" method="post" style="display:none;">
+            <input type="text" name="name" placeholder="Project name">
+            <button type="submit">OK</button>
+        </form>
+
+        <select onchange="if(this.value) window.location.href=this.value;" style="margin-top:18px;">
+            <option value="">Select scRNA Project</option>
+            {% for p in scrna_projects.keys() %}
+            <option value="/Aproject/{{ p }}?mode=scRNA">{{ p }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+    {% endif %}
+    {% if view != "projects" %}
+    </div>
+    {% endif %}
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="{{ url_for('static', filename='home.js') }}"></script>
+
+    <footer class="site-footer">
+        <span class="footer-title">© 2026 RNAseq Analysis Platform</span>
+        <span class="footer-sep">·</span>
+        <span>Author: Eden Zhang</span>
+    </footer>
+</body>
+
+</html>
