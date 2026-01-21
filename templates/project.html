@@ -67,21 +67,81 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
         }
 
-        function openCreate() {
-            popup.style.display = 'flex';
-            createLabel.style.opacity = '0';
-            projectNameInput.value = '';
-            projectNameInput.focus();
+        function setImp(el, prop, val) {
+            el.style.setProperty(prop, val, 'important');
         }
 
-        function closeCreate() {
-            popup.style.display = 'none';
-            createLabel.style.opacity = '1';
+        function rebuildListFromStorage() {
+            // Remove all project cards except the create card
+            const cards = Array.from(projectsContainer.querySelectorAll('.project-card'));
+            for (const c of cards) {
+                if (c === createCard) continue;
+                c.remove();
+            }
+            // Re-render all projects in stored order
+            const names = loadProjects();
+            for (const n of names) {
+                renderProjectCard(n);
+            }
+        }
+
+        function makeMiniBtn(text, title) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = text;
+            b.title = title;
+
+            // Reuse the same class as the existing black mini buttons (OK/Cancel)
+            b.className = 'create-mini-btn';
+
+            // Force override even if CSS applies big button sizing
+            setImp(b, 'width', '26px');
+            setImp(b, 'height', '26px');
+            setImp(b, 'min-width', '26px');
+            setImp(b, 'max-width', '26px');
+            setImp(b, 'min-height', '26px');
+            setImp(b, 'max-height', '26px');
+            setImp(b, 'padding', '0');
+            setImp(b, 'margin', '0');
+            setImp(b, 'display', 'inline-flex');
+            setImp(b, 'align-items', 'center');
+            setImp(b, 'justify-content', 'center');
+            setImp(b, 'line-height', '1');
+            setImp(b, 'font-size', '12px');
+            setImp(b, 'border-radius', '6px');
+            setImp(b, 'cursor', 'pointer');
+            setImp(b, 'z-index', '2147483647');
+            setImp(b, 'position', 'relative');
+
+            // Copy the visual style from the existing OK button so the look matches my_project
+            const ref = document.getElementById('addProjectBtn') || document.getElementById('cancelBtn');
+            if (ref) {
+                const s = window.getComputedStyle(ref);
+                // Preserve full background (supports gradients), border, and text color
+                setImp(b, 'background', s.background);
+                setImp(b, 'background-color', s.backgroundColor);
+                setImp(b, 'border', s.border);
+                setImp(b, 'color', s.color);
+                setImp(b, '-webkit-text-fill-color', s.color);
+                setImp(b, 'box-shadow', s.boxShadow);
+                setImp(b, 'text-shadow', s.textShadow);
+                setImp(b, 'filter', s.filter);
+            }
+
+            // Avoid native focus styling changing colors
+            setImp(b, 'outline', 'none');
+            setImp(b, 'appearance', 'none');
+            setImp(b, '-webkit-appearance', 'none');
+
+            return b;
         }
 
         function renderProjectCard(name) {
             const card = document.createElement('div');
             card.className = 'project-card';
+            // Ensure overlay can render above the main button
+            card.style.position = 'relative';
+            card.style.overflow = 'visible';
 
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -90,11 +150,221 @@
             btn.textContent = name;
             btn.title = name;
             btn.addEventListener('click', () => {
-                // placeholder: wire to real project navigation later
                 window.location.href = "/projects/" + encodeURIComponent(name);
             });
 
+            // Overlay actions (top-right)
+            const actions = document.createElement('div');
+            actions.className = 'project-actions';
+            setImp(actions, 'position', 'absolute');
+            setImp(actions, 'top', '90px');
+            setImp(actions, 'right', '10px');
+            setImp(actions, 'display', 'flex');
+            setImp(actions, 'gap', '6px');
+            setImp(actions, 'align-items', 'center');
+            setImp(actions, 'z-index', '2147483647');
+            setImp(actions, 'pointer-events', 'auto');
+            setImp(actions, 'opacity', '1');
+            setImp(actions, 'visibility', 'visible');
+
+            // 修改
+            const editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "experiment-edit-icon";
+            editBtn.style.color = "#d6d6d6";
+            editBtn.title = "Edit";
+            editBtn.textContent = "✎";
+            editBtn.style.background = "transparent";
+            editBtn.style.border = "none";
+            editBtn.style.cursor = "pointer";
+            editBtn.addEventListener("mouseenter", () => {
+                editBtn.style.transform = "scale(1.2)";
+            });
+            editBtn.addEventListener("mouseleave", () => {
+                editBtn.style.transform = "scale(1)";
+            });
+            editBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (card.dataset.editing === '1') return;
+                card.dataset.editing = '1';
+
+                const originalActions = Array.from(actions.childNodes);
+                const originalActionsTop = actions.style.getPropertyValue('top');
+                const originalActionsRight = actions.style.getPropertyValue('right');
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = name;
+                input.maxLength = 50;
+
+                // Reuse the same class so CSS typography/spacing stays identical
+                input.className = btn.className;
+
+                // Make the input visually match the main button (including gradients/background images)
+                const s = window.getComputedStyle(btn);
+                setImp(input, 'width', '100%');
+
+               // 关键：高度跟原按钮一致，避免 edit 模式变矮
+                setImp(input, 'height', s.height);
+                setImp(input, 'min-height', s.height);
+                setImp(card, 'min-height', s.height);
+                setImp(input, 'box-sizing', 'border-box');
+                setImp(input, 'border', s.border);
+                setImp(input, 'border-radius', s.borderRadius);
+
+                // Use full `background` (not backgroundColor) to preserve gradients/textures
+                setImp(input, 'background', s.background);
+                setImp(input, 'background-color', s.backgroundColor);
+
+                // Preserve text color and rendering (Safari/WebKit included)
+                setImp(input, 'color', s.color);
+                setImp(input, '-webkit-text-fill-color', s.color);
+                setImp(input, 'caret-color', s.color);
+
+                // Preserve shadows/filters that affect perceived color
+                setImp(input, 'box-shadow', s.boxShadow);
+                setImp(input, 'text-shadow', s.textShadow);
+                setImp(input, 'filter', s.filter);
+
+                // Preserve typography
+                setImp(input, 'font-family', s.fontFamily);
+                setImp(input, 'font-size', s.fontSize);
+                setImp(input, 'font-weight', s.fontWeight);
+                setImp(input, 'letter-spacing', s.letterSpacing);
+                setImp(input, 'text-align', 'center');
+                setImp(input, 'padding', s.padding);
+
+                // Remove native input styling that can change colors on focus/active
+                setImp(input, 'outline', 'none');
+                setImp(input, 'appearance', 'none');
+                setImp(input, '-webkit-appearance', 'none');
+
+                // Swap button -> input in place
+                btn.style.display = 'none';
+                card.insertBefore(input, btn);
+
+                // Show tiny OK / Cancel buttons while editing
+                const okBtn = makeMiniBtn('✓', 'OK');
+                const cancelSmallBtn = makeMiniBtn('✕', 'Cancel');
+                for (const b of [okBtn, cancelSmallBtn]) {
+                    setImp(b, 'width', '22px');
+                    setImp(b, 'height', '22px');
+                    setImp(b, 'min-width', '22px');
+                    setImp(b, 'min-height', '22px');
+                    setImp(b, 'font-size', '11px');
+                }
+                // Edit-mode position for ✓/✕
+                setImp(actions, 'top', '65px');
+                setImp(actions, 'right', '40px');
+
+                actions.innerHTML = '';
+                actions.appendChild(okBtn);
+                actions.appendChild(cancelSmallBtn);
+
+                function restoreUI() {
+                    if (input.parentNode) input.remove();
+                    btn.style.display = '';
+                    actions.innerHTML = '';
+                    for (const n of originalActions) actions.appendChild(n);
+                    // Restore actions position so edit/delete icons do not shift
+                    setImp(actions, 'top', (originalActionsTop && originalActionsTop.trim()) ? originalActionsTop : '90px');
+                    setImp(actions, 'right', (originalActionsRight && originalActionsRight.trim()) ? originalActionsRight : '10px');
+                    delete card.dataset.editing;
+                }
+
+                function applyRename() {
+                    const next = (input.value || '').trim();
+
+                    // Inline validation feedback, keep editing
+                    const list = loadProjects();
+                    if (!next || next === name || list.includes(next)) {
+                        setImp(input, 'border', '2px solid rgba(255,80,80,0.95)');
+                        input.focus();
+                        input.select();
+                        return;
+                    }
+
+                    const updated = list.map((p) => (p === name ? next : p));
+                    saveProjects(updated);
+
+                    // Optional: migrate per-project state key if you later add it
+                    const oldKey = `project_data:${name}`;
+                    const newKey = `project_data:${next}`;
+                    const oldVal = localStorage.getItem(oldKey);
+                    if (oldVal && !localStorage.getItem(newKey)) {
+                        localStorage.setItem(newKey, oldVal);
+                        localStorage.removeItem(oldKey);
+                    }
+
+                    restoreUI();
+                    rebuildListFromStorage();
+                }
+
+                okBtn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    applyRename();
+                });
+
+                cancelSmallBtn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    restoreUI();
+                });
+
+                input.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Enter') {
+                        ev.preventDefault();
+                        applyRename();
+                    } else if (ev.key === 'Escape') {
+                        ev.preventDefault();
+                        restoreUI();
+                    }
+                });
+
+                // Focus after DOM insertion
+                input.focus();
+                input.select();
+            });
+
+            // Create delete button
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "experiment-delete-icon";
+            delBtn.title = "Delete experiment";
+            delBtn.textContent = "🗑";
+            delBtn.style.background = "transparent";
+            delBtn.style.border = "none";
+            delBtn.style.cursor = "pointer";
+            delBtn.addEventListener("mouseenter", () => {
+                delBtn.style.transform = "scale(1.2)";
+            });
+            delBtn.addEventListener("mouseleave", () => {
+                delBtn.style.transform = "scale(1)";
+            });
+            delBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const ok = window.confirm(`Delete project "${name}"?`);
+                if (!ok) return;
+
+                const list = loadProjects();
+                saveProjects(list.filter((p) => p !== name));
+
+                // Optional: remove per-project state key if you later add it
+                localStorage.removeItem(`project_data:${name}`);
+
+                rebuildListFromStorage();
+            });
+
+            actions.appendChild(editBtn);
+            actions.appendChild(delBtn);
+
             card.appendChild(btn);
+            card.appendChild(actions);
 
             // Insert BEFORE the create card so create stays last
             projectsContainer.insertBefore(card, createCard);
@@ -107,16 +377,13 @@
             if (!existing.includes(name)) {
                 existing.push(name);
                 saveProjects(existing);
-                renderProjectCard(name);
+                rebuildListFromStorage();
             }
         }
 
         // Initial render from storage
         (function initFromStorage() {
-            const names = loadProjects();
-            for (const n of names) {
-                renderProjectCard(n);
-            }
+            rebuildListFromStorage();
         })();
 
         createProjectBtn.addEventListener('click', (e) => {
@@ -159,6 +426,18 @@
                 cancelBtn.click();
             }
         });
+
+        function openCreate() {
+            popup.style.display = 'flex';
+            createLabel.style.opacity = '0';
+            projectNameInput.value = '';
+            projectNameInput.focus();
+        }
+
+        function closeCreate() {
+            popup.style.display = 'none';
+            createLabel.style.opacity = '1';
+        }
     </script>
 </body>
 </html>
